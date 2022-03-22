@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>BET</title>
+  </head>
+
+  <body>
+    <div>
+      <h1>Bet</h1>
+      <button style="float:right" id="logout" type="button">Logout</button>
+    </div>
+
+    <form id="form">
+      <div>
+        <label for="name">Name</label>
+        <input id="name" type="text">
+      </div>
+
+      <div>
+        <label for="price">Price</label>
+        <input id="price" type="number">
+      </div>
+
+      <div>
+        <button type="submit">Update</button>
+        <button id="delete" type="button">Delete</button>
+      </div>
+    </form>
+
+    <a href="/bets">List of bets</a>
+
+    <p id="message"></p>
+
+    <script>
+      (() => {
+        const href = window.location.href;
+        const id = href.slice(href.lastIndexOf(`/`) + 1);
+
+        /** @type {HTMLFormElement} */
+        const form = document.getElementById(`form`);
+        /** @type {HTMLButtonElement} */
+        const del = document.getElementById(`delete`);
+        /** @type {HTMLInputElement} */
+        const name = document.getElementById(`name`);
+        /** @type {HTMLInputElement} */
+        const price = document.getElementById(`price`);
+
+        form.onsubmit = e => {
+          e.preventDefault();
+          const nameValue = name.value;
+          const priceValue = parseFloat(price.value);
+
+          if (!nameValue || isNaN(priceValue)) {
+            message.innerText = `Missing values`;
+          }
+          else {
+            fetch(`/bet/${id}`, {
+              method: `put`,
+              headers: { "Content-Type": `application/json` },
+              body: JSON.stringify({
+                name: nameValue,
+                price: priceValue,
+              }),
+            })
+            .then(res => res.json())
+            .then(res => {
+              if (res.error) message.innerText = res.error;
+              else message.innerText = `Updated!`;
+            })
+            .catch(err => { message.innerText = err; });
+          }
+        };
+
+        del.onclick = () => {
+          fetch(`/bet/${id}`, { method: `delete` })
+          .then(res => res.json())
+          .then(res => {
+            if (res.error) message.innerText = res.error;
+            else window.location.href = `/bets`;
+          })
+          .catch(err => { message.innerText = err; });
+        }
+
+        fetch(`/bet/${id}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.error) message.innerText = res.error;
+          else {
+            name.value = res.name;
+            price.value = res.price;
+          }
+        })
+        .catch(err => { message.innerText = err; });
+      })();
+    </script>
+    <script>
+      (() => {
+        /** @type {HTMLButtonElement} */
+        const logout = document.getElementById(`logout`);
+
+        logout.onclick = () => {
+          fetch(`/logout`, { method: `post` })
+          .then(res => res.json())
+          .then(res => {
+            if (res.error) message.innerText = res.error;
+            else window.location.href = `/login`;
+          })
+          .catch(err => { message.innerText = err; });
+        };
+      })();
+    </script>
+  </body>
+</html>

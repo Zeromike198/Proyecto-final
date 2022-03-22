@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>USER</title>
+  </head>
+
+  <body>
+    <div>
+      <h1>User</h1>
+      <button style="float:right" id="logout" type="button">Logout</button>
+    </div>
+
+    <form id="form">
+      <div>
+        <label for="username">Username</label>
+        <input id="username" type="text">
+      </div>
+
+      <div>
+        <label for="fullName">Full name</label>
+        <input id="fullName" type="text">
+      </div>
+
+      <div>
+        <label for="password">Password</label>
+        <input id="password" type="password">
+      </div>
+
+      <div>
+        <label for="admin">Is administrator</label>
+        <input id="admin" type="checkbox">
+      </div>
+
+      <div>
+        <button type="submit">Update</button>
+        <button id="delete" type="button">Delete</button>
+      </div>
+    </form>
+
+    <a href="/users">List of users</a>
+
+    <p id="message"></p>
+
+    <script>
+      (() => {
+        const href = window.location.href;
+        const id = href.slice(href.lastIndexOf(`/`) + 1);
+
+        /** @type {HTMLFormElement} */
+        const form = document.getElementById(`form`);
+        /** @type {HTMLButtonElement} */
+        const del = document.getElementById(`delete`);
+        /** @type {HTMLInputElement} */
+        const username = document.getElementById(`username`);
+        /** @type {HTMLInputElement} */
+        const fullName = document.getElementById(`fullName`);
+        /** @type {HTMLInputElement} */
+        const password = document.getElementById(`password`);
+        /** @type {HTMLInputElement} */
+        const admin = document.getElementById(`admin`);
+
+        form.onsubmit = e => {
+          e.preventDefault();
+          const usernameValue = username.value;
+          const fullNameValue = fullName.value;
+          const passwordValue = password.value;
+          const adminValue = admin.checked;
+
+          if (!usernameValue || !fullNameValue || !passwordValue) {
+            message.innerText = `Missing values`;
+          }
+          else {
+            fetch(`/user/${id}`, {
+              method: `put`,
+              headers: { "Content-Type": `application/json` },
+              body: JSON.stringify({
+                username: usernameValue,
+                fullName: fullNameValue,
+                password: passwordValue,
+                admin: adminValue
+              }),
+            })
+            .then(res => res.json())
+            .then(res => {
+              if (res.error) message.innerText = res.error;
+              else message.innerText = `Updated!`;
+              password.value = ``;
+            })
+            .catch(err => { message.innerText = err; });
+          }
+        };
+
+        del.onclick = () => {
+          fetch(`/user/${id}`, { method: `delete` })
+          .then(res => res.json())
+          .then(res => {
+            if (res.error) message.innerText = res.error;
+            else window.location.href = `/users`;
+          })
+          .catch(err => { message.innerText = err; });
+        }
+
+        fetch(`/user/${id}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.error) message.innerText = res.error;
+          else {
+            username.value = res.username;
+            fullName.value = res.fullName;
+            admin.checked = res.admin;
+          }
+        })
+        .catch(err => { message.innerText = err; });
+      })();
+    </script>
+    <script>
+      (() => {
+        /** @type {HTMLButtonElement} */
+        const logout = document.getElementById(`logout`);
+
+        logout.onclick = () => {
+          fetch(`/logout`, { method: `post` })
+          .then(res => res.json())
+          .then(res => {
+            if (res.error) message.innerText = res.error;
+            else window.location.href = `/login`;
+          })
+          .catch(err => { message.innerText = err; });
+        };
+      })();
+    </script>
+  </body>
+</html>
